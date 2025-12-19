@@ -23,7 +23,7 @@ const Dashboard = () => {
 
     const fetchFiles = async () => {
         try {
-            const res = await axios.get(`http://127.0.0.1:8000/files?user_email=${userEmail}`);
+            const res = await axios.get(`https://secret-vault-bbsy.onrender.com/files?user_email=${userEmail}`);
             setFilesList(res.data);
         } catch (err) {
             console.error("Failed to load files");
@@ -51,7 +51,7 @@ const Dashboard = () => {
         formData.append("user_email", userEmail);
 
         try {
-            await axios.post("http://127.0.0.1:8000/upload", formData, {
+            await axios.post("https://secret-vault-bbsy.onrender.com/upload", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
             setStatus("Upload Complete");
@@ -67,7 +67,7 @@ const Dashboard = () => {
 
     const handleDownload = async (filename) => {
         try {
-            const response = await axios.post("http://127.0.0.1:8000/download", {
+            const response = await axios.post("https://secret-vault-bbsy.onrender.com/download", {
                 filename: filename,
                 private_key: vaultKey,
                 user_email: userEmail
@@ -89,7 +89,7 @@ const Dashboard = () => {
         const confirm = window.confirm("⚠️ EMERGENCY PROTOCOL ⚠️\n\nAre you sure? This is irreversible.");
         if (confirm) {
             try {
-                const res = await axios.post("http://127.0.0.1:8000/destroy-vault", {
+                const res = await axios.post("https://secret-vault-bbsy.onrender.com/destroy-vault", {
                     user_email: userEmail,
                     private_key: vaultKey
                 });

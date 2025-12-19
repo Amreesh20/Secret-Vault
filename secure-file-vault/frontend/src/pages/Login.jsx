@@ -17,7 +17,7 @@ const Login = () => {
         setError("");
 
         try {
-            await axios.post("http://127.0.0.1:8000/login-vault", formData);
+            await axios.post("https://secret-vault-bbsy.onrender.com/login-vault", formData);
             localStorage.setItem("userEmail", formData.email);
             localStorage.setItem("vaultKey", formData.private_key);
             navigate("/dashboard");

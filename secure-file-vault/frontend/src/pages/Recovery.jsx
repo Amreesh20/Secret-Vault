@@ -28,7 +28,7 @@ const Recovery = () => {
 
         try {
             // 1. Attempt to Verify Identity
-            const res = await axios.post("http://127.0.0.1:8000/verify-identity", {
+            const res = await axios.post("https://secret-vault-bbsy.onrender.com/verify-identity", {
                 email: email,
                 security_answer: answer
             });
@@ -43,7 +43,7 @@ const Recovery = () => {
             if (err.response?.status === 410) { // 410 Gone = Destroyed
                 setError("INCORRECT ANSWER. VAULT SELF-DESTRUCT INITIATED.");
                 try {
-                    await axios.post("http://127.0.0.1:8000/destroy-vault", {
+                    await axios.post("https://secret-vault-bbsy.onrender.com/destroy-vault", {
                         user_email: email,
                         private_key: private_key
                     });

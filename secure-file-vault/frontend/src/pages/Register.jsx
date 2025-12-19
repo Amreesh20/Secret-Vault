@@ -14,7 +14,7 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post("http://127.0.0.1:8000/create-vault", formData);
+            const res = await axios.post("https://secret-vault-bbsy.onrender.com/create-vault", formData);
             setPrivateKey(res.data.YOUR_PRIVATE_KEY);
         } catch (err) {
             setError(err.response?.data?.detail || "Registration Failed");
