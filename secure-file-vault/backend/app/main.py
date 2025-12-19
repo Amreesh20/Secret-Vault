@@ -8,7 +8,7 @@ import io
 import shutil
 import time
 # ... (keep existing imports)
-from app.services.drive_service import backup_and_upload
+#from app.services.drive_service import backup_and_upload
 from app.services.email_service import send_recovery_token
 from app.api import auth
 # ... (existing imports)
@@ -173,66 +173,48 @@ def destroy_vault(
     user_email: str = Body(...),
     private_key: str = Body(...) 
 ):
-    """
-    EMERGENCY PROTOCOL:
-    1. Identifies all files owned by the user.
-    2. Moves them to a 'Destroyed' quarantine folder.
-    3. Revokes access (removes from metadata).
-    4. Generates a textual Recovery Token.
-    """
     metadata = load_metadata()
     files_moved = 0
-    
-    # Generate a specialized "Recovery Token" (Simulated)
-    # In a real app, this would be the ONLY key capable of decrypting the quarantined files.
     recovery_token = f"REC-{int(time.time())}-{auth.hash_key(private_key)[:8].upper()}"
 
-    # Iterate through all files to find the user's data
-    # We use list(metadata.keys()) to avoid error while modifying the dictionary
+    # 1. Create a Temp Folder for this specific user's quarantine
+    user_quarantine_dir = os.path.join(DESTROY_DIR, f"temp_{user_email}")
+    os.makedirs(user_quarantine_dir, exist_ok=True)
+
+    # 2. Move files to this specific folder (not the general one)
     for filename in list(metadata.keys()):
         if metadata[filename] == user_email:
             source_path = os.path.join(STORAGE_DIR, filename)
-            
             if os.path.exists(source_path):
-                # Move to Destroyed Folder with a timestamp prefix
                 dest_filename = f"DESTROYED_{int(time.time())}_{filename}"
-                dest_path = os.path.join(DESTROY_DIR, dest_filename)
-                
+                dest_path = os.path.join(user_quarantine_dir, dest_filename)
                 shutil.move(source_path, dest_path)
                 files_moved += 1
-            
-            # Remove from Active Metadata (User can no longer see/access it)
             del metadata[filename]
 
-    # Save the updated metadata (cleaning the ledger)
     with open(METADATA_FILE, "w") as f:
         json.dump(metadata, f)
-    
+
+    # 3. Zip ONLY this user's folder
     try:
         print("DEBUG: Creating backup ZIP...")
-        zip_path = shutil.make_archive(f"VAULT_BACKUP_{user_email}", 'zip', DESTROY_DIR)
+        zip_path = shutil.make_archive(f"VAULT_BACKUP_{user_email}", 'zip', user_quarantine_dir)
         
-        # Import the new function
         from app.services.email_service import send_backup_email
         send_backup_email(user_email, recovery_token, zip_path)
         
-        # Cleanup: Delete local ZIP after sending
-        os.remove(zip_path)
+        os.remove(zip_path) # Delete the zip
+        shutil.rmtree(user_quarantine_dir) # Delete the temp folder
         
     except Exception as e:
         print(f"Backup Email Failed: {e}")
-    # -------------------------------------
-     # --- NEW: Delete User Record ---
+
     if user_email in fake_users_db:
         del fake_users_db[user_email]
-        print(f"✅ User record for {user_email} has been wiped.")
-    # -----------------------------
-
 
     return {
         "status": "VAULT DESTROYED",
         "files_affected": files_moved,
-        "message": "Your vault has been locked and files moved to deep storage.",
         "recovery_token": recovery_token
     }
 
