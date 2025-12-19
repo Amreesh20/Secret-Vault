@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant U as User
+    participant FE as Frontend
+    participant BE as Backend
+    participant DB as Database
+    
+    U->>FE: Login
+    FE->>BE: Authenticate
+    BE->>DB: Check User
+    DB-->>BE: User Valid
+    BE-->>FE: Token
